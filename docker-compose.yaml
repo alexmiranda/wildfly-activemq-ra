@@ -19,7 +19,7 @@ services:
       retries: 60
 
   wildfly:
-    image: quay.io/wildfly/wildfly:26.1.2.Final-jdk17
+    image: quay.io/wildfly/wildfly:23.0.2.Final
     env_file:
       - .env
     ports:
