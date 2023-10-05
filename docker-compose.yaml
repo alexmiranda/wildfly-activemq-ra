@@ -1,0 +1,28 @@
+version: '3'
+services:
+  maven:
+    image: maven:3.9.4-eclipse-temurin-17
+    env_file:
+      - .env
+    volumes:
+      - ./:/activemq-rar
+    working_dir: /activemq-rar
+    command: mvn dependency:copy -Dartifact=org.apache.activemq:activemq-rar:${ACTIVEMQ_VERSION}:rar -DoutputDirectory=/activemq-rar
+
+  wildfly:
+    image: quay.io/wildfly/wildfly:26.1.2.Final-jdk17
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+      - "9990:9990"
+    volumes:
+      - ./activemq-rar-${ACTIVEMQ_VERSION}.rar:/opt/jboss/wildfly/standalone/deployments/activemq-rar-${ACTIVEMQ_VERSION}.rar
+      - ./standalone.xml:/opt/jboss/wildfly/standalone/configuration/standalone.xml
+    command: /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0
+    depends_on:
+      maven:
+        condition: service_completed_successfully
+
+volumes:
+  wildfly-deployments:
