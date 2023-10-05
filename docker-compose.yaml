@@ -8,6 +8,15 @@ services:
       - ./:/activemq-rar
     working_dir: /activemq-rar
     command: mvn dependency:copy -Dartifact=org.apache.activemq:activemq-rar:${ACTIVEMQ_VERSION}:rar -DoutputDirectory=/activemq-rar
+  
+  activemq:
+    image: apache/activemq-classic:5.18.2
+    ports:
+      - "61616:61616"
+    healthcheck:
+      test: curl -t DUMMY=1 -s telnet://127.0.0.1:61616 --connect-timeout 2 -o /dev/null < /dev/null || test "$?" -eq 48
+      interval: 1s
+      retries: 60
 
   wildfly:
     image: quay.io/wildfly/wildfly:26.1.2.Final-jdk17
@@ -21,6 +30,8 @@ services:
       - ./standalone.xml:/opt/jboss/wildfly/standalone/configuration/standalone.xml
     command: /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0
     depends_on:
+      activemq:
+        condition: service_healthy
       maven:
         condition: service_completed_successfully
 
